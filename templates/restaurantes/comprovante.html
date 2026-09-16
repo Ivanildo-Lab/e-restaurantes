@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Comprovante Mesa {{ mesa.numero }}{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto bg-white rounded-3xl shadow-sm border p-8">
+    <div class="text-center mb-6">
+        <h2 class="text-xl font-black text-slate-800">{{ empresa.nome }}</h2>
+        <p class="text-xs text-slate-500">CNPJ: {{ empresa.cnpj }}</p>
+    </div>
+    <div class="border-t border-b border-slate-200 py-4 mb-4">
+        <h3 class="font-black text-slate-700 uppercase text-sm mb-3">Comprovante de Consumo</h3>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+            <div><span class="text-slate-400">Mesa:</span> <span class="font-bold">{{ mesa.numero }}</span></div>
+            <div><span class="text-slate-400">Responsável:</span> <span class="font-bold">{{ mesa.responsavel }}</span></div>
+            <div><span class="text-slate-400">Abertura:</span> <span class="font-bold">{{ mesa.data_abertura|date:"d/m/Y H:i" }}</span></div>
+            <div><span class="text-slate-400">Fechamento:</span> <span class="font-bold">{{ mesa.data_fechamento|date:"d/m/Y H:i" }}</span></div>
+        </div>
+    </div>
+    <table class="w-full text-xs mb-4">
+        <thead>
+            <tr class="text-[9px] font-black uppercase text-slate-400 border-b">
+                <th class="text-left pb-2">Item</th>
+                <th class="text-center pb-2">Qtd</th>
+                <th class="text-right pb-2">Unit.</th>
+                <th class="text-right pb-2">Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in itens %}
+            <tr class="border-b border-slate-100">
+                <td class="py-2 font-bold text-slate-700">{{ item.produto.nome }}</td>
+                <td class="py-2 text-center">{{ item.quantidade }}</td>
+                <td class="py-2 text-right">R$ {{ item.valor_unitario }}</td>
+                <td class="py-2 text-right font-bold text-emerald-600">R$ {{ item.subtotal }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="flex justify-between items-center border-t-2 border-slate-200 pt-4 mb-6">
+        <span class="text-lg font-black text-slate-700">TOTAL:</span>
+        <span class="text-2xl font-black text-emerald-600">R$ {{ mesa.valor_total }}</span>
+    </div>
+    {% if pagamentos %}
+    <div class="border-t border-slate-200 pt-4 mb-6">
+        <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Pagamentos</p>
+        {% for pg in pagamentos %}
+        <div class="flex justify-between text-xs mb-1">
+            <span class="text-slate-600">{{ pg.descricao }}</span>
+            <span class="font-bold {% if pg.status == 'PAGA' %}text-emerald-600{% else %}text-amber-600{% endif %}">R$ {{ pg.valor }} ({{ pg.status }})</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <div class="text-center">
+        <p class="text-[10px] text-slate-400 mb-4">Obrigado pela preferência!</p>
+        <a href="{% url 'restaurantes:mapa_mesas' %}" class="inline-block py-3 px-8 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition">
+            <i class="fa fa-th-large mr-2"></i> VOLTA AO MAPA
+        </a>
+    </div>
+</div>
+{% endblock %}

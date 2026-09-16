@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block titulo_cabecalho %}Mesa {{ mesa.numero }}{% endblock %}
+{% block subtitulo_cabecalho %}Responsável: {{ mesa.responsavel }} | Aberta: {{ mesa.data_abertura|date:"d/m/Y H:i" }}{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="bg-white rounded-3xl shadow-sm border p-6">
+        <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest mb-4 flex items-center gap-2">
+            <i class="fa fa-plus-circle text-emerald-500"></i> Adicionar Item
+        </h3>
+        <form method="post" action="{% url 'restaurantes:adicionar_item' mesa.id %}" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Produto</label>
+                {{ form.produto }}
+            </div>
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Quantidade</label>
+                {{ form.quantidade }}
+            </div>
+            <button type="submit" class="w-full py-3 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 transition">
+                <i class="fa fa-plus mr-2"></i> ADICIONAR
+            </button>
+        </form>
+    </div>
+    <div class="bg-white rounded-3xl shadow-sm border p-6 flex flex-col">
+        <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest mb-4 flex items-center gap-2">
+            <i class="fa fa-receipt text-rose-500"></i> Consumo da Mesa
+        </h3>
+        <div class="flex-1 space-y-2 mb-4 max-h-96 overflow-y-auto">
+            {% for item in itens %}
+            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <div>
+                    <p class="text-sm font-bold text-slate-700">{{ item.quantidade }}x {{ item.produto.nome }}</p>
+                    <p class="text-[10px] text-slate-400">R$ {{ item.valor_unitario }} cada</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-sm font-black text-emerald-600">R$ {{ item.subtotal }}</span>
+                    <a href="{% url 'restaurantes:remover_item' item.id %}" class="text-rose-400 hover:text-rose-600" onclick="return confirm('Remover este item?')">
+                        <i class="fa fa-times-circle"></i>
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-center text-slate-400 text-sm py-8">Nenhum item adicionado</p>
+            {% endfor %}
+        </div>
+        <div class="border-t-2 border-slate-200 pt-4 flex justify-between items-center">
+            <span class="text-sm font-bold text-slate-500 uppercase">Total:</span>
+            <span class="text-2xl font-black text-emerald-600">R$ {{ total }}</span>
+        </div>
+        <form method="post" action="{% url 'restaurantes:fechar_mesa' mesa.id %}" class="mt-4">
+            {% csrf_token %}
+            <button type="submit" class="w-full py-4 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-700 shadow-lg transition">
+                <i class="fa fa-lock mr-2"></i> FECHAR MESA
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block titulo_cabecalho %}Caixas{% endblock %}
+{% block content %}
+<div class="bg-white rounded-3xl shadow-sm border p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest">Caixas / Bancos</h3>
+        <a href="{% url 'financeiro:adicionar_caixa' %}" class="bg-amber-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-amber-600 transition"><i class="fa fa-plus mr-2"></i> NOVO</a>
+    </div>
+    <div class="space-y-2">
+        {% for c in caixas %}
+        <div class="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div>
+                <p class="text-sm font-bold text-slate-700">{{ c.nome }}</p>
+                <p class="text-[10px] text-slate-400">Saldo Inicial: R$ {{ c.saldo_inicial }}</p>
+            </div>
+            <div class="flex gap-2">
+                {% if c.id|stringformat:"s" != caixa_padrao_id %}
+                <a href="{% url 'financeiro:set_caixa_padrao' c.id %}" class="text-amber-500 hover:text-amber-700 text-xs font-bold">DEFINIR PADRÃO</a>
+                {% else %}
+                <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">PADRÃO</span>
+                {% endif %}
+                <a href="{% url 'financeiro:editar_caixa' c.id %}" class="text-blue-500 hover:text-blue-700"><i class="fa fa-edit"></i></a>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-slate-400 py-8">Nenhum caixa cadastrado</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

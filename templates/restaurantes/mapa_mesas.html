@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block titulo_cabecalho %}Mapa de Mesas{% endblock %}
+{% block content %}
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+    {% for mesa in mesas %}
+    <div class="relative bg-white rounded-3xl border-2 transition-all duration-300 hover:shadow-2xl overflow-hidden
+        {% if mesa.status == 'LIVRE' %} border-emerald-500/20 {% else %} border-rose-500/20 {% endif %}">
+        <div class="p-5 {% if mesa.status == 'LIVRE' %} bg-emerald-50 {% else %} bg-rose-50 {% endif %}">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="text-3xl font-black text-slate-800">{{ mesa.numero }}</h3>
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500">{{ mesa.get_status_display }}</p>
+                </div>
+                <i class="fa {% if mesa.status == 'LIVRE' %} fa-check-circle text-emerald-500 {% else %} fa-utensils text-rose-500 {% endif %} text-2xl"></i>
+            </div>
+        </div>
+        <div class="p-5">
+            {% if mesa.status == 'OCUPADA' %}
+            <div class="mb-3">
+                <span class="text-[9px] font-bold uppercase text-slate-400 block leading-none">Responsável</span>
+                <p class="text-[11px] font-bold text-slate-600 truncate leading-tight">{{ mesa.responsavel }}</p>
+                <p class="text-[9px] font-bold text-slate-400 mt-1">Aberta em {{ mesa.data_abertura|date:"d/m H:i" }}</p>
+                <p class="text-[11px] font-bold text-emerald-600 mt-1">R$ {{ mesa.total_atual }}</p>
+            </div>
+            {% endif %}
+            <div class="space-y-2">
+                {% if mesa.status == 'LIVRE' %}
+                    <a href="{% url 'restaurantes:abrir_mesa' mesa.id %}" class="flex items-center justify-center gap-2 w-full py-3 bg-emerald-600 text-white text-xs font-black rounded-xl hover:bg-emerald-700 transition">ABRIR MESA</a>
+                {% else %}
+                    <a href="{% url 'restaurantes:mesa_aberta' mesa.id %}" class="flex items-center justify-center gap-2 w-full py-3 bg-rose-600 text-white text-xs font-black rounded-xl hover:bg-rose-700 shadow-lg transition">VER MESA</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

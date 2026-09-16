@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block titulo_cabecalho %}Fechar Mesa {{ mesa.numero }}{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border p-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div>
+            <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest mb-4">Extrato da Mesa</h3>
+            <div class="space-y-2 mb-6 max-h-64 overflow-y-auto">
+                {% for item in itens %}
+                <div class="flex justify-between bg-slate-50 p-3 rounded-xl text-sm">
+                    <span class="font-bold text-slate-700">{{ item.quantidade }}x {{ item.produto.nome }}</span>
+                    <span class="font-black text-emerald-600">R$ {{ item.subtotal }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="border-t-2 border-slate-200 pt-4 flex justify-between items-center">
+                <span class="text-lg font-black text-slate-700">TOTAL:</span>
+                <span class="text-3xl font-black text-emerald-600">R$ {{ total }}</span>
+            </div>
+        </div>
+        <div>
+            <form method="post" id="formFechamento">
+                {% csrf_token %}
+                <input type="hidden" name="processar_fechamento" value="1">
+                <input type="hidden" name="imprimir" id="inputImprimir" value="sim">
+                <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest mb-4">Pagamento</h3>
+                <div class="mb-4">
+                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Caixa</label>
+                    <select name="caixa_id" class="w-full bg-white border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 outline-none">
+                        {% for c in caixas %}<option value="{{ c.id }}">{{ c.nome }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-2xl text-white mb-4">
+                    <div class="grid grid-cols-12 gap-1 mb-2">
+                        <select id="selectFormaPgto" onchange="checkTipoPgto()" class="col-span-5 text-[10px] bg-slate-700 border-none rounded p-2 text-white">
+                            <option value="">Forma...</option>
+                            {% for f in formas_pagamento %}<option value="{{ f.id }}" data-nome="{{ f.nome }}" data-tipo="{{ f.tipo }}">{{ f.nome }}</option>{% endfor %}
+                        </select>
+                        <input type="number" id="inputValorPgto" step="0.01" class="col-span-4 text-[10px] bg-slate-700 border-none rounded p-2 text-white text-center" placeholder="R$">
+                        <input type="number" id="inputParcelasItem" value="1" min="1" class="hidden col-span-2 text-[10px] bg-slate-600 border-none rounded p-2 text-white text-center">
+                        <button type="button" onclick="addPagamento()" class="col-span-1 bg-emerald-500 rounded text-white font-bold">+</button>
+                    </div>
+                    <div id="listaPagosVisor" class="mt-2 space-y-1 text-[10px]"></div>
+                    <div class="flex justify-between items-center pt-2 mt-2 border-t border-slate-700">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase">Saldo Devedor:</span>
+                        <span id="txtSaldoRestante" class="text-sm font-black text-rose-400">R$ {{ total }}</span>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <a href="{% url 'restaurantes:mesa_aberta' mesa.id %}" class="flex-1 text-center py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition">VOLTAR</a>
+                    <button type="button" onclick="confirmarFechamento()" class="flex-1 py-3 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-700 transition">FECHAR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div id="modalConfirmacao" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[10000] flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="p-8 text-center">
+            <i class="fa fa-print text-5xl text-slate-300 mb-4"></i>
+            <h3 class="text-lg font-black text-slate-800 mb-2">Deseja imprimir o comprovante?</h3>
+            <div class="flex gap-3">
+                <button onclick="fecharMesa(false)" class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition">Sem Impressão</button>
+                <button onclick="fecharMesa(true)" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition">Imprimir</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let listaPagos = [];
+const totalGeral = {{ total }};
+
+function checkTipoPgto() {
+    const sel = document.getElementById('selectFormaPgto');
+    const opt = sel.options[sel.selectedIndex];
+    const inputParc = document.getElementById('inputParcelasItem');
+    const inputVal = document.getElementById('inputValorPgto');
+    if (opt.dataset.tipo === 'P') { inputParc.classList.remove('hidden'); inputVal.classList.replace('col-span-4', 'col-span-2'); }
+    else { inputParc.classList.add('hidden'); inputVal.classList.replace('col-span-2', 'col-span-4'); inputParc.value = 1; }
+}
+
+function addPagamento() {
+    const sel = document.getElementById('selectFormaPgto');
+    const val = document.getElementById('inputValorPgto');
+    const parc = document.getElementById('inputParcelasItem');
+    const opt = sel.options[sel.selectedIndex];
+    if (!opt.value || !val.value) return;
+    listaPagos.push({ id: opt.value, nome: opt.dataset.nome, valor: parseFloat(val.value), tipo: opt.dataset.tipo, parcelas: parseInt(parc.value) });
+    renderLista(); val.value = ''; sel.selectedIndex = 0; checkTipoPgto();
+}
+
+function removerPgto(i) { listaPagos.splice(i, 1); renderLista(); }
+
+function renderLista() {
+    const div = document.getElementById('listaPagosVisor');
+    const saldo = document.getElementById('txtSaldoRestante');
+    let totalP = 0; let html = '';
+    listaPagos.forEach((p, i) => {
+        totalP += p.valor;
+        html += `<div class="flex justify-between text-emerald-400"><span>${p.nome} ${p.tipo=='P'?'('+p.parcelas+'x)':''}</span><span>R$ ${p.valor.toFixed(2)} <button type="button" onclick="removerPgto(${i})" class="text-rose-400">×</button></span><input type="hidden" name="pgto_ids[]" value="${p.id}"><input type="hidden" name="pgto_valores[]" value="${p.valor}"><input type="hidden" name="pgto_parcelas[]" value="${p.parcelas}"></div>`;
+    });
+    div.innerHTML = html;
+    const saldoVal = totalGeral - totalP;
+    saldo.innerText = "R$ " + (saldoVal > 0 ? saldoVal.toFixed(2).replace('.', ',') : "0,00");
+    saldo.className = saldoVal <= 0.01 ? "text-sm font-black text-emerald-400" : "text-sm font-black text-rose-400";
+}
+
+function confirmarFechamento() { document.getElementById('modalConfirmacao').classList.remove('hidden'); }
+
+function fecharMesa(imprimir) {
+    document.getElementById('inputImprimir').value = imprimir ? 'sim' : 'nao';
+    document.getElementById('modalConfirmacao').classList.add('hidden');
+    document.getElementById('formFechamento').submit();
+}
+</script>
+{% endblock %}

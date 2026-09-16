@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block titulo_cabecalho %}Caixa{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto bg-white rounded-3xl shadow-sm border p-8">
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        {% for field in form %}
+        <div><label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">{{ field.label }}</label>{{ field }}</div>
+        {% endfor %}
+        <div class="flex gap-4">
+            <a href="{% url 'financeiro:lista_caixas' %}" class="flex-1 text-center py-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition">CANCELAR</a>
+            <button type="submit" class="flex-1 py-4 bg-amber-500 text-white font-bold rounded-xl hover:bg-amber-600 transition">SALVAR</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block titulo_cabecalho %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white rounded-3xl shadow-sm border p-8">
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        {% if form.errors %}
+        <div class="bg-red-50 border border-red-200 rounded-2xl p-4">
+            {% for field, errors in form.errors.items %}{% for error in errors %}<p class="text-xs text-red-600">{{ field|title }}: {{ error }}</p>{% endfor %}{% endfor %}
+        </div>
+        {% endif %}
+        {% for field in form %}
+        <div>
+            <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">{{ field.label }}</label>
+            {{ field }}
+        </div>
+        {% endfor %}
+        <div class="flex gap-4">
+            <a href="{% url 'estoque:lista_produtos' %}" class="flex-1 text-center py-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition">CANCELAR</a>
+            <button type="submit" class="flex-1 py-4 bg-amber-500 text-white font-bold rounded-xl hover:bg-amber-600 transition">SALVAR</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

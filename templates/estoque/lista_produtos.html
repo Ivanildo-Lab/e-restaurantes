@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block titulo_cabecalho %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="bg-white rounded-3xl shadow-sm border p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest">{{ titulo }}</h3>
+    </div>
+    <div class="space-y-2">
+        {% for p in produtos %}
+        <div class="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div>
+                <p class="text-sm font-bold text-slate-700">{{ p.nome }}</p>
+                <p class="text-[10px] text-slate-400">Estoque: {{ p.estoque_deposito }} | Preço: R$ {{ p.preco_venda }}</p>
+            </div>
+            <a href="{% url 'estoque:editar_produto' p.id %}" class="text-blue-500 hover:text-blue-700"><i class="fa fa-edit"></i></a>
+        </div>
+        {% empty %}
+        <p class="text-center text-slate-400 py-8">Nenhum produto</p>
+        {% endfor %}
+    </div>
+    <div class="mt-6 flex gap-3">
+        <a href="{% url 'estoque:novo_produto' %}" class="bg-amber-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-amber-600 transition"><i class="fa fa-plus mr-2"></i> NOVO</a>
+        <a href="{% url 'estoque:registrar_movimentacao' %}" class="bg-slate-800 text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-900 transition"><i class="fa fa-exchange-alt mr-2"></i> MOVIMENTAR</a>
+    </div>
+</div>
+{% endblock %}

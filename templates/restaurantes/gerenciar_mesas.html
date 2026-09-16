@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block titulo_cabecalho %}Gerenciar Mesas{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="bg-white rounded-3xl shadow-sm border p-6">
+        <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest mb-4">
+            {% if editando %}Editar Mesa {{ editando.numero }}{% else %}Nova Mesa{% endif %}
+        </h3>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Número da Mesa</label>
+                {{ form.numero }}
+            </div>
+            {% if form.errors %}
+            <div class="bg-red-50 border border-red-200 rounded-xl p-3">
+                {% for field, errors in form.errors.items %}{% for error in errors %}<p class="text-xs text-red-600">{{ error }}</p>{% endfor %}{% endfor %}
+            </div>
+            {% endif %}
+            <div class="flex gap-3">
+                {% if editando %}
+                <a href="{% url 'restaurantes:gerenciar_mesas' %}" class="flex-1 text-center py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition">CANCELAR</a>
+                {% endif %}
+                <button type="submit" class="flex-1 py-3 bg-amber-500 text-white font-bold rounded-xl hover:bg-amber-600 transition">
+                    {% if editando %}ATUALIZAR{% else %}CRIAR MESA{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="bg-white rounded-3xl shadow-sm border p-6">
+        <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest mb-4">Mesas Cadastradas</h3>
+        <div class="space-y-2">
+            {% for mesa in mesas %}
+            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <div class="flex items-center gap-3">
+                    <span class="text-lg font-black text-slate-700">{{ mesa.numero }}</span>
+                    <span class="text-[10px] font-bold px-2 py-1 rounded-full {% if mesa.status == 'LIVRE' %}bg-emerald-100 text-emerald-700{% else %}bg-rose-100 text-rose-700{% endif %}">
+                        {{ mesa.get_status_display }}
+                    </span>
+                </div>
+                <div class="flex gap-2">
+                    <a href="{% url 'restaurantes:editar_mesa' mesa.id %}" class="text-blue-500 hover:text-blue-700"><i class="fa fa-edit"></i></a>
+                    <a href="{% url 'restaurantes:excluir_mesa' mesa.id %}" class="text-rose-500 hover:text-rose-700" onclick="return confirm('Excluir esta mesa?')"><i class="fa fa-trash"></i></a>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-center text-slate-400 text-sm py-8">Nenhuma mesa cadastrada</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

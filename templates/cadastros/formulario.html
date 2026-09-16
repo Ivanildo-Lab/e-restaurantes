@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block titulo_cabecalho %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        {% if form.errors %}
+        <div class="bg-red-50 border border-red-200 rounded-2xl p-4">
+            <div class="flex items-center gap-2 mb-2">
+                <i class="fa fa-exclamation-circle text-red-500"></i>
+                <span class="text-sm font-bold text-red-700">Corrija os erros:</span>
+            </div>
+            {% for field, errors in form.errors.items %}{% for error in errors %}<p class="text-xs text-red-600">{{ field|title }}: {{ error }}</p>{% endfor %}{% endfor %}
+        </div>
+        {% endif %}
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+            <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest mb-6 flex items-center gap-2 border-b pb-4">
+                <i class="fa fa-id-card text-amber-500"></i> Dados do Cadastro
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2"><label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Nome</label>{{ form.nome }}</div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Tipo Pessoa</label>{{ form.tipo_pessoa }}</div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">CPF</label>{{ form.cpf }}</div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">CNPJ</label>{{ form.cnpj }}</div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">RG</label>{{ form.rg }}</div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">E-mail</label>{{ form.email }}</div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Celular</label>{{ form.celular }}</div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Telefone</label>{{ form.telefone_fixo }}</div>
+            </div>
+        </div>
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+            <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest mb-6 flex items-center gap-2 border-b pb-4">
+                <i class="fa fa-map-marker-alt text-amber-500"></i> Endereço
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+                <div><label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">CEP</label>{{ form.cep }}</div>
+                <div class="md:col-span-3"><label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Endereço</label>{{ form.logradouro }}</div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Nº</label>{{ form.numero }}</div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Bairro</label>{{ form.bairro }}</div>
+                <div class="md:col-span-3"><label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Cidade</label>{{ form.cidade }}</div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">UF</label>{{ form.uf }}</div>
+                <div class="md:col-span-2"><label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Complemento</label>{{ form.complemento }}</div>
+            </div>
+        </div>
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+            <label class="text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 block">Observações</label>
+            {{ form.observacoes }}
+        </div>
+        <div class="flex gap-4">
+            <a href="{% url 'lista_clientes' %}" class="flex-1 text-center py-4 bg-white text-slate-500 font-bold rounded-2xl border border-slate-200 hover:bg-slate-50 transition">CANCELAR</a>
+            <button type="submit" class="flex-1 py-4 bg-amber-500 text-white font-black rounded-2xl shadow-xl hover:bg-amber-600 transition">SALVAR</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

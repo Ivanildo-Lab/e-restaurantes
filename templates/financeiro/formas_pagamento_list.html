@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block titulo_cabecalho %}Formas de Pagamento{% endblock %}
+{% block content %}
+<div class="bg-white rounded-3xl shadow-sm border p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest">Formas de Pagamento</h3>
+        <a href="{% url 'financeiro:nova_forma_pagamento' %}" class="bg-amber-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-amber-600 transition"><i class="fa fa-plus mr-2"></i> NOVA</a>
+    </div>
+    <div class="space-y-2">
+        {% for f in formas %}
+        <div class="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div>
+                <p class="text-sm font-bold text-slate-700">{{ f.nome }}</p>
+                <p class="text-[10px] text-slate-400">{{ f.get_tipo_display }}</p>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-1 rounded-full {% if f.ativo %}bg-emerald-100 text-emerald-700{% else %}bg-slate-100 text-slate-500{% endif %}">{{ f.ativo|yesno:"Ativo,Inativo" }}</span>
+        </div>
+        {% empty %}
+        <p class="text-center text-slate-400 py-8">Nenhuma forma de pagamento</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

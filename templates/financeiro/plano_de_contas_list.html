@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block titulo_cabecalho %}Plano de Contas{% endblock %}
+{% block content %}
+<div class="bg-white rounded-3xl shadow-sm border p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest">Categorias</h3>
+        <a href="{% url 'financeiro:adicionar_plano_de_contas' %}" class="bg-amber-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-amber-600 transition"><i class="fa fa-plus mr-2"></i> NOVA</a>
+    </div>
+    <div class="space-y-2">
+        {% for p in planos_de_contas %}
+        <div class="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div>
+                <p class="text-sm font-bold text-slate-700">{{ p.codigo }} - {{ p.nome }}</p>
+                <p class="text-[10px] text-slate-400">{{ p.get_tipo_display }}</p>
+            </div>
+            <div class="flex gap-2">
+                <a href="{% url 'financeiro:editar_plano_de_contas' p.id %}" class="text-blue-500 hover:text-blue-700"><i class="fa fa-edit"></i></a>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-slate-400 py-8">Nenhuma categoria</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
