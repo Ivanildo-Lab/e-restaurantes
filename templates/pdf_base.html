@@ -1,0 +1,37 @@
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page {
+    size: {{ page_size|default:"A4" }};
+    margin: 12mm 10mm 14mm 10mm;
+    @bottom-center { content: "Página " counter(page) " de " counter(pages); font-size: 8pt; color: #64748b; }
+  }
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 9pt; color: #1e293b; }
+  .cab { text-align: center; margin-bottom: 10px; }
+  .cab h1 { font-size: 15pt; margin: 0; }
+  .cab p { font-size: 8pt; color: #64748b; margin: 2px 0; }
+  .titulo { font-size: 12pt; font-weight: bold; margin: 12px 0 4px 0; text-align: center; }
+  .filtros { font-size: 8pt; color: #475569; text-align: center; margin-bottom: 8px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  th { background: #1e293b; color: #fff; font-size: 8pt; text-transform: uppercase; padding: 6px 5px; text-align: left; }
+  td { border-bottom: 1px solid #e2e8f0; padding: 5px; font-size: 9pt; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  .num { text-align: right; white-space: nowrap; }
+  .ctr { text-align: center; }
+  .tot { font-weight: bold; background: #f1f5f9 !important; }
+  .verde { color: #059669; font-weight: bold; }
+  .vermelho { color: #e11d48; font-weight: bold; }
+</style>
+</head>
+<body>
+  <div class="cab">
+    <h1>{{ empresa.nome }}</h1>
+    <p>CNPJ: {{ empresa.cnpj }}</p>
+  </div>
+  <div class="titulo">{{ rel_titulo }}</div>
+  {% if rel_filtros %}<div class="filtros">{{ rel_filtros }}</div>{% endif %}
+  <div class="filtros">Gerado em {{ gerado_em|date:"d/m/Y H:i" }} por {{ gerado_por }}</div>
+  {% block conteudo %}{% endblock %}
+</body>
+</html>

@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'financeiro',
     'estoque',
     'restaurantes',
+    'pdv',
 ]
 
 MIDDLEWARE = [

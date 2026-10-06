@@ -1,0 +1,24 @@
+{% extends 'pdf_base.html' %}
+{% block conteudo %}
+<p class="filtros">Saldo anterior: <strong>R$ {{ saldo_anterior }}</strong> &nbsp;|&nbsp; Saldo final: <strong>R$ {{ saldo_final }}</strong></p>
+<table>
+  <thead>
+    <tr><th>Data</th><th>Descrição</th><th>Caixa</th><th>Categoria</th><th class="ctr">Tipo</th><th class="num">Valor</th></tr>
+  </thead>
+  <tbody>
+    {% for l in lancamentos %}
+    <tr>
+      <td>{{ l.data_lancamento|date:"d/m/Y" }}</td>
+      <td><strong>{{ l.descricao }}</strong></td>
+      <td>{{ l.caixa.nome|default:"-" }}</td>
+      <td>{{ l.plano_de_contas.nome|default:"-" }}</td>
+      <td class="ctr">{% if l.tipo == 'C' %}Crédito{% else %}Débito{% endif %}</td>
+      <td class="num {% if l.tipo == 'C' %}verde{% else %}vermelho{% endif %}">{% if l.tipo == 'C' %}+{% else %}-{% endif %} R$ {{ l.valor }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" class="ctr">Nenhum lançamento encontrado</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p class="filtros">Lançamentos: {{ lancamentos|length }}</p>
+{% endblock %}

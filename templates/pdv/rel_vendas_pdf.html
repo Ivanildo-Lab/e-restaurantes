@@ -1,0 +1,22 @@
+{% extends 'pdf_base.html' %}
+{% block conteudo %}
+<table>
+  <thead>
+    <tr><th>Nº</th><th>Cliente</th><th>Data</th><th>Pagamento</th><th class="num">Total</th></tr>
+  </thead>
+  <tbody>
+    {% for v in vendas %}
+    <tr>
+      <td>#{{ v.id }}</td>
+      <td><strong>{{ v.cliente }}</strong></td>
+      <td>{{ v.data_finalizacao|date:"d/m/Y H:i" }}</td>
+      <td>{{ v.forma_pagamento.nome }}</td>
+      <td class="num verde">R$ {{ v.valor_total }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="ctr">Nenhuma venda encontrada</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p class="filtros">Vendas: {{ vendas|length }} &nbsp;|&nbsp; Total geral: <strong>R$ {{ soma_total }}</strong></p>
+{% endblock %}

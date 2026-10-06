@@ -18,7 +18,7 @@ class Conta(ModeloSaaS):
     STATUS_CHOICES = [('PENDENTE', 'Pendente'), ('PAGA', 'Paga / Recebida'), ('CANCELADA', 'Cancelada')]
     descricao = models.CharField(max_length=255)
     plano_de_contas = models.ForeignKey(PlanoDeContas, on_delete=models.PROTECT)
-    cadastro = models.ForeignKey(Cadastro, on_delete=models.PROTECT, verbose_name="Favorecido")
+    cadastro = models.ForeignKey(Cadastro, on_delete=models.PROTECT, verbose_name="Favorecido", null=True, blank=True)
     valor = models.DecimalField(max_digits=12, decimal_places=2)
     data_vencimento = models.DateField()
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDENTE')

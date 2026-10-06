@@ -13,7 +13,12 @@
                 <i class="fa fa-th-large mr-2"></i> ACESSAR MAPA DE MESAS
             </a>
         {% else %}
-            <form method="post" class="space-y-4">
+            {% if form.errors %}
+            <div class="mb-4 p-4 bg-rose-50 border border-rose-200 text-rose-600 text-sm font-bold rounded-xl">
+                <i class="fa fa-exclamation-circle mr-2"></i>Usuário ou senha inválidos. Tente novamente.
+            </div>
+            {% endif %}
+            <form method="post" action="{% url 'login' %}" class="space-y-4">
                 {% csrf_token %}
                 <input type="text" name="username" placeholder="Usuário" class="w-full border-2 border-slate-200 p-4 rounded-xl focus:border-amber-500 outline-none" required>
                 <input type="password" name="password" placeholder="Senha" class="w-full border-2 border-slate-200 p-4 rounded-xl focus:border-amber-500 outline-none" required>

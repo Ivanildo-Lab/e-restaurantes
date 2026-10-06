@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block titulo_cabecalho %}Categorias de Produtos{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="bg-white rounded-3xl shadow-sm border p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest">Categorias</h3>
+            <a href="{% url 'estoque:nova_categoria' %}" class="bg-amber-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-amber-600 transition"><i class="fa fa-plus mr-2"></i> NOVA</a>
+        </div>
+        <div class="space-y-3">
+            {% for cat in categorias %}
+            <div class="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-100 hover:bg-slate-100 transition">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-black text-sm">
+                        {{ cat.ordem }}
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-700">{{ cat.nome }}</p>
+                        {% if cat.descricao %}<p class="text-[10px] text-slate-400">{{ cat.descricao }}</p>{% endif %}
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="{% url 'estoque:editar_categoria' cat.id %}" class="text-slate-400 hover:text-blue-600 p-2"><i class="fa fa-edit"></i></a>
+                    <form method="post" action="{% url 'estoque:excluir_categoria' cat.id %}" onsubmit="return confirm('Excluir esta categoria?')">
+                        {% csrf_token %}
+                        <button type="submit" class="text-slate-400 hover:text-rose-600 p-2"><i class="fa fa-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-12 text-slate-400">
+                <i class="fa fa-layer-group text-4xl mb-3 block"></i>
+                <p class="font-bold">Nenhuma categoria cadastrada</p>
+                <p class="text-sm">Crie categorias para organizar seus produtos</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Recibo Venda #{{ venda.id }}{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto bg-white rounded-3xl shadow-sm border p-8 print-area">
+    <div class="text-center mb-6">
+        <h2 class="text-xl font-black text-slate-800">{{ empresa.nome }}</h2>
+        <p class="text-xs text-slate-500">CNPJ: {{ empresa.cnpj }}</p>
+    </div>
+    <div class="border-t border-b border-slate-200 py-4 mb-4">
+        <h3 class="font-black text-slate-700 uppercase text-sm mb-3">Recibo de Venda — #{{ venda.id }}</h3>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+            <div><span class="text-slate-400">Cliente:</span> <span class="font-bold">{{ venda.cliente }}</span></div>
+            <div><span class="text-slate-400">Pagamento:</span> <span class="font-bold">{{ venda.forma_pagamento.nome }}</span></div>
+            <div class="col-span-2"><span class="text-slate-400">Data:</span> <span class="font-bold">{{ venda.data_finalizacao|date:"d/m/Y H:i" }}</span></div>
+        </div>
+    </div>
+    <table class="w-full text-xs mb-4">
+        <thead>
+            <tr class="text-[9px] font-black uppercase text-slate-400 border-b">
+                <th class="text-left pb-2">Item</th>
+                <th class="text-center pb-2">Qtd</th>
+                <th class="text-right pb-2">Unit.</th>
+                <th class="text-right pb-2">Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in itens %}
+            <tr class="border-b border-slate-100">
+                <td class="py-2 font-bold text-slate-700">{{ item.produto.nome }}</td>
+                <td class="py-2 text-center">{{ item.quantidade }}</td>
+                <td class="py-2 text-right">R$ {{ item.valor_unitario }}</td>
+                <td class="py-2 text-right font-bold text-emerald-600">R$ {{ item.subtotal }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="border-t-2 border-slate-200 pt-4 mb-4 space-y-1">
+        <div class="flex justify-between items-center">
+            <span class="text-lg font-black text-slate-700">TOTAL:</span>
+            <span class="text-2xl font-black text-emerald-600">R$ {{ venda.valor_total }}</span>
+        </div>
+        {% if venda.valor_recebido %}
+        <div class="flex justify-between text-xs">
+            <span class="text-slate-400">Valor recebido:</span>
+            <span class="font-black text-slate-700">R$ {{ venda.valor_recebido }}</span>
+        </div>
+        {% endif %}
+        {% if venda.troco %}
+        <div class="flex justify-between text-xs">
+            <span class="text-slate-400">Troco:</span>
+            <span class="font-black text-emerald-600">R$ {{ venda.troco }}</span>
+        </div>
+        {% endif %}
+    </div>
+    <div class="text-center mb-4">
+        <p class="text-[10px] text-slate-400">Obrigado pela preferência!</p>
+    </div>
+    <div class="flex gap-3 no-print">
+        <a href="{% url 'pdv:nova_venda' %}" class="flex-1 text-center py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition">
+            <i class="fa fa-plus mr-2"></i> NOVA VENDA
+        </a>
+        <button type="button" onclick="window.print()" class="flex-1 py-3 bg-blue-600 text-white font-black rounded-xl hover:bg-blue-700 shadow-lg transition">
+            <i class="fa fa-print mr-2"></i> IMPRIMIR
+        </button>
+    </div>
+</div>
+
+<style>
+@media print {
+    @page { margin: 2mm; size: 79mm auto; }
+    body * { visibility: hidden; }
+    .print-area, .print-area * { visibility: visible; }
+    .print-area {
+        position: absolute; left: 0; top: 0;
+        width: 79mm; max-width: 79mm;
+        border: none !important; border-radius: 0 !important;
+        box-shadow: none !important; padding: 2mm !important;
+    }
+    .no-print { display: none !important; }
+}
+</style>
+{% endblock %}

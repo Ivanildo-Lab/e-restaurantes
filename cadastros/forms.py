@@ -4,7 +4,7 @@ from .models import Cadastro
 class CadastroForm(forms.ModelForm):
     class Meta:
         model = Cadastro
-        fields = ['nome', 'tipo_pessoa', 'papel', 'cpf', 'cnpj', 'rg', 'email', 'celular', 'telefone_fixo', 'cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'uf', 'observacoes']
+        fields = ['nome', 'tipo_pessoa', 'cpf', 'cnpj', 'rg', 'email', 'celular', 'telefone_fixo', 'cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'uf', 'observacoes']
         widgets = {'observacoes': forms.Textarea(attrs={'rows': 2})}
 
     def __init__(self, *args, **kwargs):

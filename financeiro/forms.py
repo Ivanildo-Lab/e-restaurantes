@@ -1,6 +1,7 @@
 from django import forms
 from .models import Conta, Lancamento, Caixa, PlanoDeContas, FormaPagamento
 from cadastros.models import Cadastro
+from core.widgets import AutoCompleteWidget
 
 class CaixaForm(forms.ModelForm):
     class Meta:
@@ -34,7 +35,12 @@ class ContaForm(forms.ModelForm):
     class Meta:
         model = Conta
         fields = ['descricao', 'plano_de_contas', 'cadastro', 'valor', 'data_vencimento', 'status', 'documento', 'observacoes', 'arquivo']
-        widgets = {'data_vencimento': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}), 'observacoes': forms.Textarea(attrs={'rows': 3})}
+        widgets = {
+            'data_vencimento': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+            'observacoes': forms.Textarea(attrs={'rows': 3}),
+            'cadastro': AutoCompleteWidget(api_url='/api/buscar/cadastro/', placeholder='Buscar favorecido...'),
+            'plano_de_contas': AutoCompleteWidget(api_url='/api/buscar/plano-contas/', placeholder='Buscar plano...'),
+        }
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         tipo_filtro = kwargs.pop('tipo_filtro', None)
@@ -51,7 +57,11 @@ class LancamentoManualForm(forms.ModelForm):
     class Meta:
         model = Lancamento
         fields = ['caixa', 'data_lancamento', 'tipo', 'plano_de_contas', 'descricao', 'valor']
-        widgets = {'data_lancamento': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'})}
+        widgets = {
+            'data_lancamento': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+            'caixa': AutoCompleteWidget(api_url='/api/buscar/caixa/', placeholder='Buscar caixa...'),
+            'plano_de_contas': AutoCompleteWidget(api_url='/api/buscar/plano-contas/', placeholder='Buscar plano...'),
+        }
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)

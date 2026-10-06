@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block titulo_cabecalho %}Histórico de Estoque{% endblock %}
+{% block subtitulo_cabecalho %}Consultas de movimentações de entrada e saída{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="bg-white rounded-3xl shadow-sm border p-6 mb-6">
+        <form method="get" class="flex flex-col md:flex-row gap-4 items-end">
+            <div class="flex-1">
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Produto / Fornecedor</label>
+                <input type="text" name="q" value="{{ q }}" placeholder="Buscar por produto ou fornecedor..." class="w-full bg-white border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 outline-none transition-all">
+            </div>
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Tipo</label>
+                <select name="tipo" class="bg-white border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 outline-none transition-all">
+                    <option value="">Todos</option>
+                    <option value="E" {% if tipo == 'E' %}selected{% endif %}>Entrada</option>
+                    <option value="S" {% if tipo == 'S' %}selected{% endif %}>Saída</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Data Início</label>
+                <input type="date" name="data_inicio" value="{{ data_inicio }}" class="bg-white border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 outline-none transition-all">
+            </div>
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Data Fim</label>
+                <input type="date" name="data_fim" value="{{ data_fim }}" class="bg-white border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 outline-none transition-all">
+            </div>
+            <button type="submit" class="py-3 px-6 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition flex items-center gap-2">
+                <i class="fa fa-search"></i> FILTRAR
+            </button>
+            <a href="{% url 'estoque:historico_movimentacoes' %}" class="py-3 px-6 bg-slate-100 text-slate-500 font-bold rounded-xl hover:bg-slate-200 transition flex items-center gap-2">
+                <i class="fa fa-eraser"></i> LIMPAR
+            </a>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-sm border overflow-hidden">
+        <div class="flex justify-end p-4 pb-0">
+            <a href="{% url 'estoque:rel_movimentacoes_pdf' %}?{{ request.GET.urlencode }}" target="_blank" class="bg-rose-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-rose-700 transition text-sm"><i class="fa fa-file-pdf mr-2"></i> IMPRIMIR PDF</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200">
+                        <th class="text-left py-4 px-6 text-[10px] font-black text-slate-400 uppercase">Data</th>
+                        <th class="text-left py-4 px-6 text-[10px] font-black text-slate-400 uppercase">Tipo</th>
+                        <th class="text-left py-4 px-6 text-[10px] font-black text-slate-400 uppercase">Produto</th>
+                        <th class="text-left py-4 px-6 text-[10px] font-black text-slate-400 uppercase">Fornecedor</th>
+                        <th class="text-center py-4 px-6 text-[10px] font-black text-slate-400 uppercase">Qtd</th>
+                        <th class="text-right py-4 px-6 text-[10px] font-black text-slate-400 uppercase">V. Unit.</th>
+                        <th class="text-right py-4 px-6 text-[10px] font-black text-slate-400 uppercase">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in movimentacoes %}
+                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                        <td class="py-4 px-6 text-xs text-slate-500">{{ m.data|date:"d/m/Y H:i" }}</td>
+                        <td class="py-4 px-6">
+                            {% if m.tipo == 'E' %}
+                                <span class="bg-emerald-100 text-emerald-700 text-[10px] font-black px-2 py-1 rounded-lg">ENTRADA</span>
+                            {% else %}
+                                <span class="bg-rose-100 text-rose-700 text-[10px] font-black px-2 py-1 rounded-lg">SAÍDA</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 font-bold text-slate-700">{{ m.produto.nome }}</td>
+                        <td class="py-4 px-6 text-slate-500">{{ m.fornecedor|default:"-" }}</td>
+                        <td class="py-4 px-6 text-center font-bold">{{ m.quantidade }}</td>
+                        <td class="py-4 px-6 text-right">R$ {{ m.valor_unitario }}</td>
+                        <td class="py-4 px-6 text-right font-black {% if m.tipo == 'E' %}text-emerald-600{% else %}text-rose-600{% endif %}">
+                            R$ {{ m.total|floatformat:2 }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400">
+                            <i class="fa fa-inbox text-3xl mb-3 block"></i>
+                            <p class="font-bold">Nenhuma movimentação encontrada</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

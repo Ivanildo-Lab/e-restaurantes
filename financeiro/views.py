@@ -167,6 +167,70 @@ def fluxo_caixa(request):
     return render(request, 'financeiro/fluxo_lista.html', {'lancamentos': lancamentos, 'saldo_anterior': saldo_anterior, 'saldo_final': saldo_final, 'caixas': caixas, 'categorias': categorias, 'caixa_selecionado_id': str(caixa_id) if caixa_id else '', 'categoria_selecionada_id': categoria_id_str or '', 'data_inicio': data_inicio, 'data_fim': data_fim})
 
 @login_required
+def rel_fluxo_pdf(request):
+    from core.pdf import pdf_response, nome_arquivo
+    hoje = date.today()
+    inicio_mes = hoje.replace(day=1)
+    data_inicio = request.GET.get('data_inicio') or inicio_mes.strftime('%Y-%m-%d')
+    data_fim = request.GET.get('data_fim') or hoje.strftime('%Y-%m-%d')
+    parametro_caixa_get = request.GET.get('caixa')
+    caixa_id = None
+    if parametro_caixa_get is not None:
+        if parametro_caixa_get != '':
+            caixa_id = int(parametro_caixa_get)
+    else:
+        try:
+            param = ParametroSistema.objects.get(empresa=request.user.empresa, chave='CAIXA_PADRAO_ID')
+            if param.valor and param.valor.isdigit():
+                caixa_id = int(param.valor)
+        except ParametroSistema.DoesNotExist:
+            pass
+    categoria_id_str = request.GET.get('categoria')
+    saldo_inicial_cadastro = 0
+    if not categoria_id_str:
+        if caixa_id:
+            caixa_obj = Caixa.objects.filter(id=caixa_id, empresa=request.user.empresa).first()
+            if caixa_obj:
+                saldo_inicial_cadastro = caixa_obj.saldo_inicial
+        else:
+            saldo_inicial_cadastro = Caixa.objects.filter(empresa=request.user.empresa).aggregate(Sum('saldo_inicial'))['saldo_inicial__sum'] or 0
+    movimentos_anteriores = Lancamento.objects.filter(empresa=request.user.empresa, data_lancamento__lt=data_inicio)
+    if caixa_id:
+        movimentos_anteriores = movimentos_anteriores.filter(caixa_id=caixa_id)
+    if categoria_id_str:
+        movimentos_anteriores = movimentos_anteriores.filter(plano_de_contas_id=categoria_id_str)
+    total_anteriores = movimentos_anteriores.aggregate(Sum('valor'))['valor__sum'] or 0
+    saldo_anterior = saldo_inicial_cadastro + total_anteriores
+    lancamentos = Lancamento.objects.filter(
+        empresa=request.user.empresa, data_lancamento__range=[data_inicio, data_fim]
+    ).select_related('caixa', 'plano_de_contas')
+    if caixa_id:
+        lancamentos = lancamentos.filter(caixa_id=caixa_id)
+    if categoria_id_str:
+        lancamentos = lancamentos.filter(plano_de_contas_id=categoria_id_str)
+    lancamentos = lancamentos.order_by('data_lancamento', 'id')
+    total_periodo = lancamentos.aggregate(Sum('valor'))['valor__sum'] or 0
+    saldo_final = saldo_anterior + total_periodo
+    filtros = [f"Período: {data_inicio} a {data_fim}"]
+    if caixa_id:
+        cx = Caixa.objects.filter(id=caixa_id, empresa=request.user.empresa).first()
+        if cx:
+            filtros.append(f"Caixa: {cx.nome}")
+    if categoria_id_str:
+        cat = PlanoDeContas.objects.filter(id=categoria_id_str, empresa=request.user.empresa).first()
+        if cat:
+            filtros.append(f"Categoria: {cat.nome}")
+    return pdf_response(request, 'financeiro/rel_fluxo_pdf.html', {
+        'lancamentos': lancamentos,
+        'saldo_anterior': saldo_anterior,
+        'saldo_final': saldo_final,
+        'rel_titulo': 'Relatório de Fluxo de Caixa',
+        'rel_filtros': ' | '.join(filtros),
+        'page_size': 'A4 landscape',
+    }, nome_arquivo('relatorio-fluxo-caixa'))
+
+
+@login_required
 def novo_lancamento_manual(request):
     if request.method == 'POST':
         form = LancamentoManualForm(request.POST, user=request.user)

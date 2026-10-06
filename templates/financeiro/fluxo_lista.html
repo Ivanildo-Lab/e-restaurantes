@@ -1,35 +1,73 @@
 {% extends 'base.html' %}
 {% block titulo_cabecalho %}Fluxo de Caixa{% endblock %}
 {% block content %}
-<div class="bg-white rounded-3xl shadow-sm border p-6">
-    <div class="flex justify-between items-center mb-6">
-        <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest">Fluxo de Caixa</h3>
-        <a href="{% url 'financeiro:adicionar_lancamento' %}" class="bg-amber-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-amber-600 transition"><i class="fa fa-plus mr-2"></i> NOVO</a>
-    </div>
-    <div class="bg-slate-50 p-4 rounded-xl mb-4">
-        <div class="flex justify-between text-sm">
-            <span class="font-bold text-slate-500">Saldo Anterior:</span>
-            <span class="font-black">R$ {{ saldo_anterior }}</span>
-        </div>
-        <div class="flex justify-between text-sm">
-            <span class="font-bold text-slate-500">Saldo Final:</span>
-            <span class="font-black text-emerald-600">R$ {{ saldo_final }}</span>
-        </div>
-    </div>
-    <div class="space-y-2">
-        {% for l in lancamentos %}
-        <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100 text-sm">
+<div class="max-w-6xl mx-auto">
+    <div class="bg-white rounded-3xl shadow-sm border p-6 mb-6">
+        <form method="get" class="flex flex-col md:flex-row gap-4 items-end">
             <div>
-                <p class="font-bold text-slate-700">{{ l.descricao }}</p>
-                <p class="text-[10px] text-slate-400">{{ l.data_lancamento|date:"d/m/Y" }}</p>
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Caixa</label>
+                <select name="caixa" class="bg-white border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 outline-none transition-all">
+                    <option value="">Todos</option>
+                    {% for c in caixas %}<option value="{{ c.id }}" {% if c.id|stringformat:"s" == caixa_selecionado_id %}selected{% endif %}>{{ c.nome }}</option>{% endfor %}
+                </select>
             </div>
-            <span class="font-black {% if l.tipo == 'C' %}text-emerald-600{% else %}text-rose-600{% endif %}">
-                {% if l.tipo == 'C' %}+{% else %}-{% endif %} R$ {{ l.valor }}
-            </span>
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Categoria</label>
+                <select name="categoria" class="bg-white border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 outline-none transition-all">
+                    <option value="">Todas</option>
+                    {% for cat in categorias %}<option value="{{ cat.id }}" {% if cat.id|stringformat:"s" == categoria_selecionada_id %}selected{% endif %}>{{ cat.nome }}</option>{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Data Início</label>
+                <input type="date" name="data_inicio" value="{{ data_inicio }}" class="bg-white border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 outline-none transition-all">
+            </div>
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Data Fim</label>
+                <input type="date" name="data_fim" value="{{ data_fim }}" class="bg-white border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 outline-none transition-all">
+            </div>
+            <button type="submit" class="py-3 px-6 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition flex items-center gap-2">
+                <i class="fa fa-search"></i> FILTRAR
+            </button>
+            <a href="{% url 'financeiro:fluxo_caixa' %}" class="py-3 px-6 bg-slate-100 text-slate-500 font-bold rounded-xl hover:bg-slate-200 transition flex items-center gap-2">
+                <i class="fa fa-eraser"></i> LIMPAR
+            </a>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-sm border p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest">Fluxo de Caixa</h3>
+            <div class="flex gap-3">
+                <a href="{% url 'financeiro:rel_fluxo_pdf' %}?{{ request.GET.urlencode }}" target="_blank" class="bg-rose-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-rose-700 transition"><i class="fa fa-file-pdf mr-2"></i> PDF</a>
+                <a href="{% url 'financeiro:adicionar_lancamento' %}" class="bg-amber-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-amber-600 transition"><i class="fa fa-plus mr-2"></i> NOVO</a>
+            </div>
         </div>
-        {% empty %}
-        <p class="text-center text-slate-400 py-8">Nenhum lançamento</p>
-        {% endfor %}
+        <div class="bg-slate-50 p-4 rounded-xl mb-4">
+            <div class="flex justify-between text-sm">
+                <span class="font-bold text-slate-500">Saldo Anterior:</span>
+                <span class="font-black">R$ {{ saldo_anterior }}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span class="font-bold text-slate-500">Saldo Final:</span>
+                <span class="font-black text-emerald-600">R$ {{ saldo_final }}</span>
+            </div>
+        </div>
+        <div class="space-y-2">
+            {% for l in lancamentos %}
+            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100 text-sm">
+                <div>
+                    <p class="font-bold text-slate-700">{{ l.descricao }}</p>
+                    <p class="text-[10px] text-slate-400">{{ l.data_lancamento|date:"d/m/Y" }}</p>
+                </div>
+                <span class="font-black {% if l.tipo == 'C' %}text-emerald-600{% else %}text-rose-600{% endif %}">
+                    {% if l.tipo == 'C' %}+{% else %}-{% endif %} R$ {{ l.valor }}
+                </span>
+            </div>
+            {% empty %}
+            <p class="text-center text-slate-400 py-8">Nenhum lançamento</p>
+            {% endfor %}
+        </div>
     </div>
 </div>
 {% endblock %}

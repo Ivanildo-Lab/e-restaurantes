@@ -19,6 +19,28 @@
             #sidebar-overlay { opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out; }
             #sidebar-overlay.open { opacity: 1; pointer-events: auto; }
         }
+        .autocomplete-wrapper { position: relative; }
+        .autocomplete-input-wrap { position: relative; display: flex; align-items: center; }
+        .autocomplete-input-wrap input { flex: 1; }
+        .autocomplete-clear {
+            position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+            background: #e2e8f0; border: none; border-radius: 50%; width: 22px; height: 22px;
+            cursor: pointer; font-size: 12px; color: #64748b; display: none; line-height: 22px; text-align: center;
+        }
+        .autocomplete-clear:hover { background: #cbd5e1; color: #334155; }
+        .autocomplete-dropdown {
+            position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
+            background: white; border: 2px solid #e2e8f0; border-top: none;
+            border-radius: 0 0 0.75rem 0.75rem; max-height: 200px; overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none;
+        }
+        .autocomplete-dropdown.show { display: block; }
+        .autocomplete-item {
+            padding: 10px 14px; cursor: pointer; font-size: 13px;
+            color: #334155; transition: background 0.15s;
+        }
+        .autocomplete-item:hover, .autocomplete-item.active { background: #fef3c7; color: #92400e; }
+        .autocomplete-no-results { padding: 10px 14px; color: #94a3b8; font-size: 13px; font-style: italic; }
     </style>
 </head>
 <body class="bg-slate-50 font-sans antialiased">
@@ -38,6 +60,15 @@
                 <a href="{% url 'restaurantes:gerenciar_mesas' %}" class="flex items-center text-slate-300 py-3 px-3 sidebar-item rounded-xl text-sm font-bold">
                     <i class="fa fa-cog mr-3 w-5 text-amber-500"></i> Gerenciar Mesas
                 </a>
+                <a href="{% url 'restaurantes:historico_mesas' %}" class="flex items-center text-slate-300 py-3 px-3 sidebar-item rounded-xl text-sm font-bold">
+                    <i class="fa fa-history mr-3 w-5 text-amber-500"></i> Histórico Mesas
+                </a>
+                <a href="{% url 'pdv:nova_venda' %}" class="flex items-center text-slate-300 py-3 px-3 sidebar-item rounded-xl text-sm font-bold">
+                    <i class="fa fa-cash-register mr-3 w-5 text-amber-500"></i> PDV
+                </a>
+                <a href="{% url 'pdv:historico_vendas' %}" class="flex items-center text-slate-300 py-3 px-3 sidebar-item rounded-xl text-sm font-bold">
+                    <i class="fa fa-receipt mr-3 w-5 text-amber-500"></i> Vendas PDV
+                </a>
                 <p class="text-slate-500 text-[10px] uppercase font-black px-3 mt-6 mb-2 tracking-widest">Cadastros</p>
                 <a href="{% url 'lista_clientes' %}" class="flex items-center text-slate-300 py-3 px-3 sidebar-item rounded-xl text-sm font-bold">
                     <i class="fa fa-users mr-3 w-5 text-emerald-500"></i> Clientes
@@ -47,6 +78,12 @@
                 </a>
                 <a href="{% url 'estoque:lista_produtos' %}" class="flex items-center text-slate-300 py-3 px-3 sidebar-item rounded-xl text-sm font-bold">
                     <i class="fa fa-boxes mr-3 w-5 text-orange-400"></i> Produtos / Estoque
+                </a>
+                <a href="{% url 'estoque:lista_categorias' %}" class="flex items-center text-slate-300 py-3 px-3 sidebar-item rounded-xl text-sm font-bold">
+                    <i class="fa fa-layer-group mr-3 w-5 text-orange-400"></i> Categorias
+                </a>
+                <a href="{% url 'estoque:historico_movimentacoes' %}" class="flex items-center text-slate-300 py-3 px-3 sidebar-item rounded-xl text-sm font-bold">
+                    <i class="fa fa-clipboard-list mr-3 w-5 text-orange-400"></i> Movimentações
                 </a>
                 <p class="text-slate-500 text-[10px] uppercase font-black px-3 mt-6 mb-2 tracking-widest">Financeiro</p>
                 <a href="{% url 'financeiro:fluxo_caixa' %}" class="flex items-center text-slate-300 py-3 px-3 sidebar-item rounded-xl text-sm font-bold">
@@ -63,6 +100,9 @@
                 </a>
                 <a href="{% url 'financeiro:lista_formas_pagamento' %}" class="flex items-center text-slate-300 py-3 px-3 sidebar-item rounded-xl text-sm font-bold">
                     <i class="fa fa-credit-card mr-3 w-5 text-purple-400"></i> Formas Pgto
+                </a>
+                <a href="{% url 'financeiro:lista_plano_de_contas' %}" class="flex items-center text-slate-300 py-3 px-3 sidebar-item rounded-xl text-sm font-bold">
+                    <i class="fa fa-sitemap mr-3 w-5 text-purple-400"></i> Plano de Contas
                 </a>
             </nav>
             <div class="p-4 border-t border-slate-800 bg-slate-900/50">
@@ -135,6 +175,140 @@
         toggle.addEventListener('click', () => sidebar.classList.contains('open') ? closeMenu() : openMenu());
         overlay.addEventListener('click', closeMenu);
         sidebar.querySelectorAll('nav a').forEach(link => { link.addEventListener('click', closeMenu); });
+
+        // Autocomplete
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('select[data-api-url]').forEach(function(select) {
+                var apiUrl = select.getAttribute('data-api-url');
+                var placeholder = select.getAttribute('placeholder') || 'Buscar...';
+                var selectedValue = select.value;
+                var selectedText = select.options[select.selectedIndex] ? select.options[select.selectedIndex].text : '';
+                var fieldClass = select.className;
+
+                var container = document.createElement('div');
+                container.className = 'autocomplete-wrapper';
+                container.style.position = 'relative';
+
+                var inputWrap = document.createElement('div');
+                inputWrap.className = 'autocomplete-input-wrap';
+
+                var input = document.createElement('input');
+                input.type = 'text';
+                input.className = fieldClass;
+                input.placeholder = placeholder;
+                input.autocomplete = 'off';
+                if (selectedValue && selectedText && selectedText.indexOf('---------') === -1) {
+                    input.value = selectedText;
+                }
+
+                var clearBtn = document.createElement('button');
+                clearBtn.type = 'button';
+                clearBtn.className = 'autocomplete-clear';
+                clearBtn.innerHTML = '&times;';
+                clearBtn.title = 'Limpar seleção';
+                clearBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    input.value = '';
+                    hiddenInput.value = '';
+                    input.focus();
+                });
+
+                inputWrap.appendChild(input);
+                inputWrap.appendChild(clearBtn);
+
+                var hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = select.name;
+                hiddenInput.id = select.id;
+                hiddenInput.value = selectedValue;
+
+                var dropdown = document.createElement('div');
+                dropdown.className = 'autocomplete-dropdown';
+
+                container.appendChild(inputWrap);
+                container.appendChild(hiddenInput);
+                container.appendChild(dropdown);
+                select.parentNode.replaceChild(container, select);
+
+                // Show clear button when there's a value
+                function updateClearBtn() {
+                    clearBtn.style.display = hiddenInput.value ? 'block' : 'none';
+                }
+                updateClearBtn();
+                input.addEventListener('input', updateClearBtn);
+
+                var debounceTimer;
+                var activeIndex = -1;
+
+                function search(query) {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(function() {
+                        fetch(apiUrl + '?q=' + encodeURIComponent(query))
+                            .then(function(r) { return r.json(); })
+                            .then(function(data) {
+                                dropdown.innerHTML = '';
+                                if (data.results.length === 0) {
+                                    dropdown.innerHTML = '<div class="autocomplete-no-results">Nenhum resultado encontrado</div>';
+                                } else {
+                                    data.results.forEach(function(item) {
+                                        var div = document.createElement('div');
+                                        div.className = 'autocomplete-item';
+                                        div.textContent = item.text;
+                                        div.dataset.id = item.id;
+                                        div.dataset.text = item.text;
+                                        div.addEventListener('mousedown', function(e) {
+                                            e.preventDefault();
+                                            input.value = item.text;
+                                            hiddenInput.value = item.id;
+                                            dropdown.classList.remove('show');
+                                        });
+                                        dropdown.appendChild(div);
+                                    });
+                                }
+                                dropdown.classList.add('show');
+                                activeIndex = -1;
+                            });
+                    }, 300);
+                }
+
+                input.addEventListener('input', function() {
+                    hiddenInput.value = '';
+                    search(this.value);
+                });
+
+                input.addEventListener('focus', function() {
+                    search(this.value);
+                });
+
+                input.addEventListener('keydown', function(e) {
+                    var items = dropdown.querySelectorAll('.autocomplete-item');
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        activeIndex = Math.min(activeIndex + 1, items.length - 1);
+                        items.forEach(function(it, i) { it.classList.toggle('active', i === activeIndex); });
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        activeIndex = Math.max(activeIndex - 1, 0);
+                        items.forEach(function(it, i) { it.classList.toggle('active', i === activeIndex); });
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (activeIndex >= 0 && items[activeIndex]) {
+                            input.value = items[activeIndex].dataset.text;
+                            hiddenInput.value = items[activeIndex].dataset.id;
+                            dropdown.classList.remove('show');
+                        }
+                    } else if (e.key === 'Escape') {
+                        dropdown.classList.remove('show');
+                    }
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!container.contains(e.target)) {
+                        dropdown.classList.remove('show');
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>

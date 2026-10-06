@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block titulo_cabecalho %}Histórico de Mesas{% endblock %}
+{% block subtitulo_cabecalho %}Cada ocupação é uma sessão auditável — reimprima qualquer fechamento{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="bg-white rounded-3xl shadow-sm border p-6 mb-6">
+        <form method="get" class="flex flex-col md:flex-row gap-4 items-end">
+            <div class="flex-1">
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Mesa / Responsável</label>
+                <input type="text" name="q" value="{{ q }}" placeholder="Buscar por mesa ou responsável..." class="w-full bg-white border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 outline-none transition-all">
+            </div>
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Data Início</label>
+                <input type="date" name="data_inicio" value="{{ data_inicio }}" class="w-full bg-white border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 outline-none transition-all">
+            </div>
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-1 block">Data Fim</label>
+                <input type="date" name="data_fim" value="{{ data_fim }}" class="w-full bg-white border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 outline-none transition-all">
+            </div>
+            <button type="submit" class="py-3 px-6 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition flex items-center gap-2">
+                <i class="fa fa-search"></i> FILTRAR
+            </button>
+            <a href="{% url 'restaurantes:historico_mesas' %}" class="py-3 px-6 bg-slate-100 text-slate-500 font-bold rounded-xl hover:bg-slate-200 transition flex items-center gap-2">
+                <i class="fa fa-eraser"></i> LIMPAR
+            </a>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-sm border overflow-hidden">
+        <div class="flex justify-end p-4 pb-0">
+            <a href="{% url 'restaurantes:rel_historico_pdf' %}?{{ request.GET.urlencode }}" target="_blank" class="bg-rose-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-rose-700 transition text-sm"><i class="fa fa-file-pdf mr-2"></i> IMPRIMIR PDF</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200">
+                        <th class="text-left py-4 px-6 text-[10px] font-black text-slate-400 uppercase">Sessão</th>
+                        <th class="text-left py-4 px-6 text-[10px] font-black text-slate-400 uppercase">Mesa</th>
+                        <th class="text-left py-4 px-6 text-[10px] font-black text-slate-400 uppercase">Responsável</th>
+                        <th class="text-left py-4 px-6 text-[10px] font-black text-slate-400 uppercase">Período</th>
+                        <th class="text-right py-4 px-6 text-[10px] font-black text-slate-400 uppercase">Valor Total</th>
+                        <th class="text-center py-4 px-6 text-[10px] font-black text-slate-400 uppercase">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for oc in ocupacoes %}
+                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                        <td class="py-4 px-6">
+                            <span class="bg-blue-100 text-blue-700 text-xs font-black px-3 py-1.5 rounded-lg">#{{ oc.id }}</span>
+                        </td>
+                        <td class="py-4 px-6">
+                            <span class="bg-slate-800 text-white text-xs font-black px-3 py-1.5 rounded-lg">{{ oc.mesa.numero }}</span>
+                        </td>
+                        <td class="py-4 px-6">
+                            <p class="font-bold text-slate-700">{{ oc.responsavel }}</p>
+                        </td>
+                        <td class="py-4 px-6 text-xs text-slate-500">
+                            <p><strong class="text-slate-700">IN:</strong> {{ oc.data_abertura|date:"d/m/Y H:i" }}</p>
+                            <p><strong class="text-slate-700">OUT:</strong> {{ oc.data_fechamento|date:"d/m/Y H:i" }}</p>
+                        </td>
+                        <td class="py-4 px-6 text-right">
+                            <span class="text-sm font-black text-emerald-600">R$ {{ oc.valor_total }}</span>
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            <a href="{% url 'restaurantes:comprovante_mesa' oc.id %}" class="inline-flex items-center gap-1 py-2 px-4 bg-blue-50 text-blue-600 font-bold text-xs rounded-lg hover:bg-blue-100 transition">
+                                <i class="fa fa-print"></i> REIMPRIMIR
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="py-12 text-center text-slate-400">
+                            <i class="fa fa-inbox text-3xl mb-3 block"></i>
+                            <p class="font-bold">Nenhum fechamento encontrado</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

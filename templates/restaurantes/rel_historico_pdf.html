@@ -1,0 +1,23 @@
+{% extends 'pdf_base.html' %}
+{% block conteudo %}
+<table>
+  <thead>
+    <tr><th>Sessão</th><th>Mesa</th><th>Responsável</th><th>Abertura</th><th>Fechamento</th><th class="num">Total</th></tr>
+  </thead>
+  <tbody>
+    {% for oc in ocupacoes %}
+    <tr>
+      <td>#{{ oc.id }}</td>
+      <td><strong>{{ oc.mesa.numero }}</strong></td>
+      <td>{{ oc.responsavel }}</td>
+      <td>{{ oc.data_abertura|date:"d/m/Y H:i" }}</td>
+      <td>{{ oc.data_fechamento|date:"d/m/Y H:i" }}</td>
+      <td class="num verde">R$ {{ oc.valor_total }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" class="ctr">Nenhum fechamento encontrado</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p class="filtros">Sessões: {{ ocupacoes|length }} &nbsp;|&nbsp; Total geral: <strong>R$ {{ soma_total }}</strong></p>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'pdf_base.html' %}
+{% block conteudo %}
+<table>
+  <thead>
+    <tr><th>Código</th><th>Nome</th><th>Categoria</th><th>Tipo</th><th class="ctr">Estoque</th><th class="ctr">Mín</th><th class="num">Preço</th></tr>
+  </thead>
+  <tbody>
+    {% for p in produtos %}
+    <tr>
+      <td>{{ p.id }}</td>
+      <td><strong>{{ p.nome }}</strong></td>
+      <td>{{ p.categoria.nome|default:"-" }}</td>
+      <td>{% if p.tipo == 'S' %}Serviço{% else %}Produto{% endif %}</td>
+      <td class="ctr">{{ p.estoque_deposito }}</td>
+      <td class="ctr">{{ p.estoque_minimo }}</td>
+      <td class="num">R$ {{ p.preco_venda }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" class="ctr">Nenhum produto encontrado</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p class="filtros">Total de itens: {{ produtos|length }}</p>
+{% endblock %}

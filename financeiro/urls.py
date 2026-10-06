@@ -5,6 +5,7 @@ app_name = 'financeiro'
 
 urlpatterns = [
     path('fluxo/', views.fluxo_caixa, name='fluxo_caixa'),
+    path('fluxo/pdf/', views.rel_fluxo_pdf, name='rel_fluxo_pdf'),
     path('fluxo/novo/', views.novo_lancamento_manual, name='adicionar_lancamento'),
     path('fluxo/editar/<int:id>/', views.editar_lancamento, name='editar_lancamento'),
     path('fluxo/excluir/<int:id>/', views.excluir_lancamento, name='excluir_lancamento'),

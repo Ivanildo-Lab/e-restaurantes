@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block titulo_cabecalho %}Fechar Mesa {{ mesa.numero }}{% endblock %}
+{% block titulo_cabecalho %}Fechar Mesa {{ mesa.numero }} — Sessão #{{ ocupacao.id }}{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border p-8">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -31,19 +31,29 @@
                     </select>
                 </div>
                 <div class="bg-slate-800 p-4 rounded-2xl text-white mb-4">
-                    <div class="grid grid-cols-12 gap-1 mb-2">
-                        <select id="selectFormaPgto" onchange="checkTipoPgto()" class="col-span-5 text-[10px] bg-slate-700 border-none rounded p-2 text-white">
-                            <option value="">Forma...</option>
-                            {% for f in formas_pagamento %}<option value="{{ f.id }}" data-nome="{{ f.nome }}" data-tipo="{{ f.tipo }}">{{ f.nome }}</option>{% endfor %}
+                    <div class="flex gap-2 mb-3 items-center">
+                        <select id="selectFormaPgto" class="flex-1 text-sm bg-slate-700 border-none rounded-lg p-2.5 text-white">
+                            <option value="">Selecione a forma...</option>
+                            {% for f in formas_pagamento %}<option value="{{ f.id }}" data-nome="{{ f.nome }}" data-tipo="{{ f.tipo }}" {% if f.nome|upper == 'DINHEIRO' %}selected{% endif %}>{{ f.nome }}</option>{% endfor %}
                         </select>
-                        <input type="number" id="inputValorPgto" step="0.01" class="col-span-4 text-[10px] bg-slate-700 border-none rounded p-2 text-white text-center" placeholder="R$">
-                        <input type="number" id="inputParcelasItem" value="1" min="1" class="hidden col-span-2 text-[10px] bg-slate-600 border-none rounded p-2 text-white text-center">
-                        <button type="button" onclick="addPagamento()" class="col-span-1 bg-emerald-500 rounded text-white font-bold">+</button>
+                        <input type="number" id="inputValorPgto" step="0.01" min="0.01" value="{{ total|stringformat:'f' }}" class="w-28 text-sm bg-slate-700 border-none rounded-lg p-2.5 text-white text-center" placeholder="R$ 0,00">
+                        <button type="button" onclick="addPagamento()" class="w-10 h-10 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-white font-bold text-lg flex items-center justify-center transition">+</button>
                     </div>
-                    <div id="listaPagosVisor" class="mt-2 space-y-1 text-[10px]"></div>
+                    <div id="listaPagosVisor" class="space-y-1 text-xs"></div>
+                    <p class="text-[9px] text-slate-400 mt-2">Padrão: <span class="font-bold text-slate-200">DINHEIRO</span> — se fechar sem adicionar forma, o sistema lança o total em dinheiro.</p>
                     <div class="flex justify-between items-center pt-2 mt-2 border-t border-slate-700">
                         <span class="text-[9px] font-bold text-slate-400 uppercase">Saldo Devedor:</span>
                         <span id="txtSaldoRestante" class="text-sm font-black text-rose-400">R$ {{ total }}</span>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-slate-700">
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Valor Recebido</label>
+                        <input type="number" id="inputValorRecebido" name="valor_recebido" step="0.01" min="0" oninput="calcularTroco()" class="w-full text-sm bg-slate-700 border-none rounded-lg p-2.5 text-white text-center" placeholder="R$ 0,00">
+                    </div>
+                    <div id="linhaTroco" class="mt-2 hidden">
+                        <div class="flex justify-between items-center bg-emerald-900/50 rounded-lg p-2">
+                            <span class="text-[9px] font-bold text-emerald-400 uppercase">Troco:</span>
+                            <span id="txtTroco" class="text-sm font-black text-emerald-400">R$ 0,00</span>
+                        </div>
                     </div>
                 </div>
                 <div class="flex gap-3">
@@ -70,25 +80,18 @@
 {% block scripts %}
 <script>
 let listaPagos = [];
-const totalGeral = {{ total }};
-
-function checkTipoPgto() {
-    const sel = document.getElementById('selectFormaPgto');
-    const opt = sel.options[sel.selectedIndex];
-    const inputParc = document.getElementById('inputParcelasItem');
-    const inputVal = document.getElementById('inputValorPgto');
-    if (opt.dataset.tipo === 'P') { inputParc.classList.remove('hidden'); inputVal.classList.replace('col-span-4', 'col-span-2'); }
-    else { inputParc.classList.add('hidden'); inputVal.classList.replace('col-span-2', 'col-span-4'); inputParc.value = 1; }
-}
+const totalGeral = parseFloat('{{ total|stringformat:"f" }}');
 
 function addPagamento() {
     const sel = document.getElementById('selectFormaPgto');
     const val = document.getElementById('inputValorPgto');
-    const parc = document.getElementById('inputParcelasItem');
     const opt = sel.options[sel.selectedIndex];
-    if (!opt.value || !val.value) return;
-    listaPagos.push({ id: opt.value, nome: opt.dataset.nome, valor: parseFloat(val.value), tipo: opt.dataset.tipo, parcelas: parseInt(parc.value) });
-    renderLista(); val.value = ''; sel.selectedIndex = 0; checkTipoPgto();
+    if (!opt.value) { alert('Selecione a forma de pagamento!'); return; }
+    if (!val.value || parseFloat(val.value) <= 0) { alert('Informe o valor!'); return; }
+    listaPagos.push({ id: opt.value, nome: opt.dataset.nome, valor: parseFloat(val.value), tipo: opt.dataset.tipo, parcelas: 1 });
+    renderLista();
+    val.value = '';
+    sel.selectedIndex = 0;
 }
 
 function removerPgto(i) { listaPagos.splice(i, 1); renderLista(); }
@@ -96,15 +99,46 @@ function removerPgto(i) { listaPagos.splice(i, 1); renderLista(); }
 function renderLista() {
     const div = document.getElementById('listaPagosVisor');
     const saldo = document.getElementById('txtSaldoRestante');
-    let totalP = 0; let html = '';
-    listaPagos.forEach((p, i) => {
+    let totalP = 0;
+    let html = '';
+    listaPagos.forEach(function(p, i) {
         totalP += p.valor;
-        html += `<div class="flex justify-between text-emerald-400"><span>${p.nome} ${p.tipo=='P'?'('+p.parcelas+'x)':''}</span><span>R$ ${p.valor.toFixed(2)} <button type="button" onclick="removerPgto(${i})" class="text-rose-400">×</button></span><input type="hidden" name="pgto_ids[]" value="${p.id}"><input type="hidden" name="pgto_valores[]" value="${p.valor}"><input type="hidden" name="pgto_parcelas[]" value="${p.parcelas}"></div>`;
+        html += '<div class="flex justify-between items-center text-emerald-400 py-1">';
+        html += '<span>' + p.nome + (p.tipo == 'P' ? ' (' + p.parcelas + 'x)' : '') + '</span>';
+        html += '<span class="flex items-center gap-2">R$ ' + p.valor.toFixed(2).replace('.', ',');
+        html += ' <button type="button" onclick="removerPgto(' + i + ')" class="text-rose-400 hover:text-rose-300 font-bold">&times;</button></span>';
+        html += '<input type="hidden" name="pgto_ids[]" value="' + p.id + '">';
+        html += '<input type="hidden" name="pgto_valores[]" value="' + p.valor + '">';
+        html += '<input type="hidden" name="pgto_parcelas[]" value="' + p.parcelas + '">';
+        html += '</div>';
     });
     div.innerHTML = html;
     const saldoVal = totalGeral - totalP;
-    saldo.innerText = "R$ " + (saldoVal > 0 ? saldoVal.toFixed(2).replace('.', ',') : "0,00");
-    saldo.className = saldoVal <= 0.01 ? "text-sm font-black text-emerald-400" : "text-sm font-black text-rose-400";
+    saldo.innerText = 'R$ ' + (saldoVal > 0 ? saldoVal.toFixed(2).replace('.', ',') : '0,00');
+    saldo.className = saldoVal <= 0.01 ? 'text-sm font-black text-emerald-400' : 'text-sm font-black text-rose-400';
+    calcularTroco();
+}
+
+function calcularTroco() {
+    const recebido = parseFloat(document.getElementById('inputValorRecebido').value) || 0;
+    let totalPago = 0;
+    listaPagos.forEach(function(p) { totalPago += p.valor; });
+    const saldo = totalGeral - totalPago;
+    const troco = recebido - saldo;
+    const linhaTroco = document.getElementById('linhaTroco');
+    const txtTroco = document.getElementById('txtTroco');
+    if (recebido > 0 && saldo > 0) {
+        linhaTroco.classList.remove('hidden');
+        if (troco >= 0) {
+            txtTroco.innerText = 'R$ ' + troco.toFixed(2).replace('.', ',');
+            txtTroco.className = 'text-sm font-black text-emerald-400';
+        } else {
+            txtTroco.innerText = 'R$ ' + Math.abs(troco).toFixed(2).replace('.', ',') + ' (falta)';
+            txtTroco.className = 'text-sm font-black text-rose-400';
+        }
+    } else {
+        linhaTroco.classList.add('hidden');
+    }
 }
 
 function confirmarFechamento() { document.getElementById('modalConfirmacao').classList.remove('hidden'); }
